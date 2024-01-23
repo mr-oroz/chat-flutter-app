@@ -27,14 +27,15 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(
-            color: Colors.white,
-            elevation: 0.5,
-            centerTitle: false,
-            titleTextStyle: TextStyle(
-              color: Colors.black,
-              fontSize: 32,
-            ),
-            iconTheme: IconThemeData(color: Colors.black)),
+          backgroundColor: Colors.white,
+          elevation: 0.5,
+          centerTitle: false,
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 32,
+          ),
+          iconTheme: IconThemeData(color: Colors.black),
+        ),
       ),
       home: const AuthCheck(),
     );

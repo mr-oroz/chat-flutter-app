@@ -1,30 +1,35 @@
+import 'package:chat_flutter_app/presentation/services/chat_service/chat_service.dart';
 import 'package:chat_flutter_app/presentation/theme/app_color.dart';
 import 'package:chat_flutter_app/presentation/theme/app_fonts.dart';
-import 'package:chat_flutter_app/presentation/widgets/my_circle_avatar/my_cirle_avatar.dart';
+import 'package:chat_flutter_app/presentation/widgets/card_name_and_message/card_name_and_message.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class ChatItemWidget extends StatelessWidget {
+class ChatItemWidget extends StatefulWidget {
   const ChatItemWidget({
     super.key,
-    required this.login,
     required this.name,
-    required this.message,
-    required this.status,
-    required this.onTap, required this.gradient,
+    required this.onTap,
+    required this.getRandomGradient,
+    required this.receiverId,
   });
 
-  final String login;
   final String name;
-  final String message;
-  final String status;
   final Function() onTap;
-  final Gradient gradient;
-  
+  final Gradient Function() getRandomGradient;
+  final String receiverId;
+  @override
+  State<ChatItemWidget> createState() => _ChatItemWidgetState();
+}
 
+class _ChatItemWidgetState extends State<ChatItemWidget> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final ChatService chatService = ChatService();
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
           vertical: 10,
@@ -38,49 +43,54 @@ class ChatItemWidget extends StatelessWidget {
             ),
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                MyCircleAvatar(
-                  gradient: gradient,
-                  name: login,
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: AppFonts.w600f15,
+        child: StreamBuilder(
+          stream: chatService.getMessages(
+            widget.receiverId,
+            _auth.currentUser!.uid,
+          ),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return const Text('error');
+            }
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            // извлечим сообшение последних
+            List<QueryDocumentSnapshot<Object?>>? messages =
+                snapshot.data!.docs.isNotEmpty ? snapshot.data!.docs : null;
+            if (messages != null &&
+                messages.isNotEmpty &&
+                messages.last.data() != null) {
+              var lastMessageData =
+                  messages.last.data() as Map<String, dynamic>;
+              // определение моя сообщение или от этого пользователя
+              bool isMyMessage =
+                  lastMessageData['senderId'] == _auth.currentUser!.uid;
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CardNameAndMessage(
+                    widget: widget,
+                    isMyMessage: isMyMessage,
+                    messages: messages,
+                    lastMessageData: lastMessageData,
+                  ),
+                  Text(
+                    chatService.lastDateMessage(lastMessageData['timestamp']),
+                    style: AppFonts.w500f12.copyWith(
+                      color: AppColors.textGrey1,
                     ),
-                    Row(
-                      children: [
-                        const Text(
-                          'Вы:',
-                          style: AppFonts.w500f12,
-                        ),
-                        Text(
-                          message,
-                          style: AppFonts.w500f12.copyWith(
-                            color: AppColors.textGrey1,
-                          ),
-                        )
-                      ],
-                    )
-                  ],
-                )
-              ],
-            ),
-            Text(
-              status,
-              style: AppFonts.w500f12.copyWith(
-                color: AppColors.textGrey1,
-              ),
-            )
-          ],
+                  )
+                ],
+              );
+            } else {
+              return Container();
+            }
+          },
         ),
       ),
     );

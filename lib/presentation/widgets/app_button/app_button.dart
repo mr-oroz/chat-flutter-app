@@ -1,3 +1,4 @@
+import 'package:chat_flutter_app/presentation/theme/app_fonts.dart';
 import 'package:flutter/material.dart';
 
 class AppButton extends StatelessWidget {
@@ -22,7 +23,12 @@ class AppButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(15),
           ),
         ),
-        child: Text(title),
+        child: Text(
+          title.toUpperCase(),
+          style: AppFonts.w600f15.copyWith(
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }

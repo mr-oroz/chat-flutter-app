@@ -1,15 +1,15 @@
-
 import 'package:chat_flutter_app/presentation/theme/app_fonts.dart';
 import 'package:flutter/material.dart';
 
 class MyCircleAvatar extends StatelessWidget {
   const MyCircleAvatar({
     super.key,
-    required this.gradient,
+    required this.getRandomGradient,
     required this.name,
   });
 
-  final Gradient gradient;
+  final Gradient Function() getRandomGradient;
+
   final String name;
 
   @override
@@ -18,7 +18,9 @@ class MyCircleAvatar extends StatelessWidget {
       width: 50,
       height: 50,
       decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(25), gradient: gradient),
+        borderRadius: BorderRadius.circular(25),
+        gradient: getRandomGradient(),
+      ),
       child: Center(
         child: Text(
           name.toString(),
